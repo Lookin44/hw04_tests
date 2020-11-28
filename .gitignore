@@ -16,7 +16,15 @@ __pycache__/
 *.sublime-project
 *.sublime-workspace
 
+sent_emails/
+
 static/
 posts/static/
 
 db.sqlite3
+
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
