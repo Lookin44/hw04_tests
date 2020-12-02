@@ -8,6 +8,7 @@ from posts.models import Group, Post
 
 class DataBaseTests(TestCase):
     """Подготавливаем БД."""
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -58,15 +59,17 @@ class DataBaseTests(TestCase):
                                        '.FlatpageFallbackMiddleware'})
 class StaticURLTest(DataBaseTests, TestCase):
     """Тестируем статические URL."""
+
     def test_pages_unauthorized_client(self):
         """Проверяем работу страниц для неавторизированого пользователя."""
         reverse_name_status_code = {
             reverse('index'): 200,
-            reverse('group', kwargs={'slug': 'test_group'}): 200,
+            reverse('group', kwargs={'slug': self.group.slug}): 200,
             reverse('new_post'): 302,
-            reverse('profile', kwargs={'username': 'test-author-1'}): 200,
-            reverse('post', args=('test-author-1', 1)): 200,
-            reverse('post_edit', args=('test-author-1', 1)): 302,
+            reverse('profile', kwargs={'username': self.user_1.username}): 200,
+            reverse('post', args=(self.user_1.username, self.post_1.id)): 200,
+            reverse('post_edit',
+                    args=(self.user_1.username, self.post_1.id)): 302,
             reverse('about_author'): 200,
             reverse('about_spec'): 200,
         }
@@ -79,11 +82,12 @@ class StaticURLTest(DataBaseTests, TestCase):
         """Проверяем работу страниц для авторизированого пользователя."""
         reverse_name_status_code = {
             reverse('index'): 200,
-            reverse('group', kwargs={'slug': 'test_group'}): 200,
+            reverse('group', kwargs={'slug': self.group.slug}): 200,
             reverse('new_post'): 200,
-            reverse('profile', kwargs={'username': 'test-author-1'}): 200,
-            reverse('post', args=('test-author-1', 1)): 200,
-            reverse('post_edit', args=('test-author-1', 1)): 200,
+            reverse('profile', kwargs={'username': self.user_1.username}): 200,
+            reverse('post', args=(self.user_1.username, self.post_1.id)): 200,
+            reverse('post_edit',
+                    args=(self.user_1.username, self.post_1.id)): 200,
             reverse('about_author'): 200,
             reverse('about_spec'): 200,
         }
@@ -96,7 +100,8 @@ class StaticURLTest(DataBaseTests, TestCase):
         """Проверяем работу страниц для авторизированого пользователя,
         но не автора."""
         reverse_name_status_code = {
-            reverse('post_edit', args=('test-author-1', 1)): 302,
+            reverse('post_edit',
+                    args=(self.user_1.username, self.post_1.id)): 302,
         }
         for reverse_name, status_code in reverse_name_status_code.items():
             with self.subTest(reverse_name=reverse_name):
@@ -108,8 +113,10 @@ class StaticURLTest(DataBaseTests, TestCase):
         templates_reverse_name = {
             reverse('index'): 'index.html',
             reverse('new_post'): 'post_new.html',
-            reverse('group', kwargs={'slug': 'test_group'}): 'group.html',
-            reverse('post_edit', args=('test-author-1', 1)): 'post_new.html',
+            reverse('group', kwargs={'slug': self.group.slug}): 'group.html',
+            reverse('post_edit',
+                    args=(self.user_1.username, self.post_1.id)): 'post_new'
+                                                                  '.html',
         }
         for reverse_name, template in templates_reverse_name.items():
             with self.subTest(reverse_name=reverse_name):
@@ -118,28 +125,30 @@ class StaticURLTest(DataBaseTests, TestCase):
 
     def test_new_post_unauthorized(self):
         """Проверка редиректа неавторизированного пользователя."""
-        reverse_name_url = {
-            reverse('new_post'): '/auth/login/?next=/new/',
-            reverse('post_edit', args=('test-author-1', 1)): '/auth/login'
-                                                             '/?next=/test'
-                                                             '-author-1/1'
-                                                             '/edit/',
+        rev_name_rev_name_exp = {
+            reverse('new_post'):
+                reverse('login') + '?next=' + reverse('new_post'),
+            reverse('post_edit',
+                    args=(self.user_1.username, self.post_1.id)):
+                reverse('login') + '?next=' +
+                reverse('post_edit',
+                        args=(self.user_1.username, self.post_1.id)),
         }
-        for reverse_name, url in reverse_name_url.items():
+        for reverse_name, url in rev_name_rev_name_exp.items():
             with self.subTest(reverse_name=reverse_name):
-                response = self.guest_client.get(reverse_name, follow=True)
-                self.assertRedirects(
-                    response, url)
+                response = self.guest_client.get(
+                    reverse_name, follow=False
+                )
+                self.assertRedirects(response, url, 302)
 
     def test_new_post_authorized_not_author(self):
         """Проверка редиректа авторизированного пользователя, но не автора."""
         reverse_name_url = {
-            reverse('post_edit', args=('test-author-1', 1)): '/test'
-                                                             '-author-1/1/',
+            reverse('post_edit', args=(self.user_1.username, self.post_1.id)):
+                reverse('post', args=(self.user_1.username, self.post_1.id)),
         }
         for reverse_name, url in reverse_name_url.items():
             with self.subTest(reverse_name=reverse_name):
                 response = self.authorized_client_2.get(reverse_name,
                                                         follow=True)
-                self.assertRedirects(
-                    response, url)
+                self.assertRedirects(response, url, 302)

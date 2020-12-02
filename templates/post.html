@@ -1,53 +1,12 @@
 {% extends "base.html" %}
-{% block title %} {{profile.get_full_name}} - Статья {{post.id}} {% endblock %}
+{% block title %} {{author.get_full_name}} - Статья {{post.id}} {% endblock %}
 {% block content %}
 
 <main role="main" class="container">
     <div class="row">
-        <div class="col-md-3 mb-3 mt-1">
-            <div class="card">
-                <div class="card-body">
-                    <div class="h2">
-                    {{profile.get_full_name}}
-                    </div>
-                    <div class="h3 text-muted">
-                    @{{profile.username}}
-                    </div>
-                </div>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">
-                        <div class="h6 text-muted">
-                        Подписчиков: в разработке<br />
-                        Подписан: в разработке
-                        </div>
-                    </li>
-                    <li class="list-group-item">
-                    <div class="h6 text-muted">
-                    Записей: {{posts_count}}
-                    </div>
-                    </li>
-                </ul>
-            </div>
-        </div>
+        {% include "profile_main.html" %}
         <div class="col-md-9">
-            {% if post %}
-                <div class="card mb-3 mt-1 shadow-sm">
-                    <div class="card-body">
-                        <p class="card-text">
-                            <a href="{% url 'profile' post.author.username %}"><strong class="d-block text-gray-dark">@{{ post.author.get_full_name }}</strong></a>
-                            {{ post.text }}
-                        </p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="btn-group ">
-                            {% if post.author.username == user.username %}
-                            <a class="btn btn-sm text-muted" href="{% url 'post_edit' post.author.username post.id %}" role="button">Редактировать</a>
-                            {% endif %}
-                            </div>
-                            <small class="text-muted">{{ post.pub_date|date:"d M Y H:i" }}</small>
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
+            {% include "post_main.html" %}
         </div>
     </div>
 </main>

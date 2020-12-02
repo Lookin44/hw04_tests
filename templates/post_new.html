@@ -1,13 +1,21 @@
 {% extends "base.html" %}
-{% block title %}{% if post %}Редактировать запись{% else %}Добавить запись{% endif %}{% endblock %}
+{% block title %}
+    {% if post %}Редактировать запись
+    {% else %}Добавить запись
+    {% endif %}
+{% endblock %}
 {% block content %}
 {% load user_filters %}
 <div class="row justify-content-center">
     <div class="col-md-8 p-5">
         <div class="card">
-            <div class="card-header">{% if post %}Редактировать запись{% else %}Добавить запись{% endif %}</div>
+            <div class="card-header">
+                {% if post %}Редактировать запись
+                {% else %}Добавить запись
+                {% endif %}
+            </div>
             <div class="card-body">
-                <form method="post">
+                <form action="{% if post %}{% url 'post_edit' post.author.username post.id  %}{% else %}{% url 'new_post' %}{% endif %}" method="post">
                     {% csrf_token %}
                     {% for field in form %}
                     <div class="form-group row" aria-required={% if field.field.required %}"true"{% else %}"false"{% endif %}>
@@ -30,8 +38,8 @@
                         </button>
                     </div>
                 </form>
+            </div>
         </div>
     </div>
 </div>
-    </div>
 {% endblock %}

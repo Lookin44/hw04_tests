@@ -8,12 +8,11 @@ class GroupModelTest(TestCase):
     def setUpClass(cls):
         """Создаем объект Group"""
         super().setUpClass()
-        Group.objects.create(
+        cls.group = Group.objects.create(
             title='A'*200,
             slug='test_group',
             description='Б'*200
         )
-        cls.group = Group.objects.get()
 
     def test_verbose_name(self):
         """verbose_name в полях совпадает с ожидаемым."""

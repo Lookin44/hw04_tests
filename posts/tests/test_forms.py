@@ -1,8 +1,7 @@
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from django.test import Client, TestCase
 from django.urls import reverse
-
-from posts.forms import PostForm
 from posts.models import Group, Post
 
 
@@ -15,7 +14,6 @@ class DataBaseTests(TestCase):
         cls.group = Group.objects.create(
             title='test-group',
             slug='test_group',
-            description='test-description'
         )
         # Создаем авторизированный аккаунт
         user = get_user_model()
@@ -25,20 +23,15 @@ class DataBaseTests(TestCase):
         )
         cls.authorized_client = Client()
         cls.authorized_client.force_login(cls.user)
-        # Создаем тестовый пост
-        cls.post = Post.objects.create(
-            text='Тестовый текст',
-            author=cls.user,
-            group=cls.group,
-            id=1
-        )
 
 
 class EditPostTest(DataBaseTests, TestCase):
+    """Тестируем добовление и изменение поста."""
     def test_new_post(self):
+        """Тестируем добовление поста."""
         post_count = Post.objects.count()
         form_data = {
-            'text': self.post.text,
+            'text': 'Тестовое создание поста',
             'group': self.group.id,
         }
         response = self.authorized_client.post(
@@ -46,20 +39,42 @@ class EditPostTest(DataBaseTests, TestCase):
             data=form_data,
             follow=True
         )
+        post = get_object_or_404(Post)
         self.assertRedirects(response, reverse('index'))
         self.assertEqual(Post.objects.count(), post_count + 1)
+        self.assertEqual(post.text, 'Тестовое создание поста')
+        self.assertEqual(post.author, self.user)
+        self.assertEqual(post.group, self.group)
 
     def test_edit_post(self):
+        """Тестируем изменение поста."""
+        # Создаем тестовый пост
+        post = Post.objects.create(
+            text='Тестовый текст',
+            author=self.user,
+            group=self.group,
+        )
+        # Создаем тетсувую группу
+        group_2 = Group.objects.create(
+            title='test-group-2',
+            slug='test_group_2',
+        )
         post_count = Post.objects.count()
         form_data = {
-            'text': self.post.text,
-            'group': self.group.id,
+            'text': 'Измененый текст',
+            'group': group_2.id,
         }
         response = self.authorized_client.post(
-            reverse('post_edit', args=('test-author', 1)),
+            reverse('post_edit', args=(self.user.username, post.id)),
             data=form_data,
             follow=True
         )
-        self.assertRedirects(response, reverse('post',
-                                               args=('test-author', 1)))
+        post_edit = get_object_or_404(Post)
+        self.assertRedirects(
+            response,
+            reverse('post', args=(self.user.username, post.id))
+        )
         self.assertEqual(Post.objects.count(), post_count)
+        self.assertEqual(post_edit.text, 'Измененый текст')
+        self.assertEqual(post_edit.author, self.user)
+        self.assertEqual(post_edit.group, group_2)
