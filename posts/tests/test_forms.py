@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from django.test import Client, TestCase
 from django.urls import reverse
 from posts.models import Group, Post
@@ -23,15 +22,17 @@ class DataBaseTests(TestCase):
         )
         cls.authorized_client = Client()
         cls.authorized_client.force_login(cls.user)
+        # Создаем тестовый текст
+        cls.test_text = 'Тестовое создание поста'
+        cls.test_text_edit = 'Измененый текст для тестового поста'
 
 
 class EditPostTest(DataBaseTests, TestCase):
     """Тестируем добовление и изменение поста."""
     def test_new_post(self):
         """Тестируем добовление поста."""
-        post_count = Post.objects.count()
         form_data = {
-            'text': 'Тестовое создание поста',
+            'text': self.test_text,
             'group': self.group.id,
         }
         response = self.authorized_client.post(
@@ -39,10 +40,10 @@ class EditPostTest(DataBaseTests, TestCase):
             data=form_data,
             follow=True
         )
-        post = get_object_or_404(Post)
+        post = Post.objects.get()
         self.assertRedirects(response, reverse('index'))
-        self.assertEqual(Post.objects.count(), post_count + 1)
-        self.assertEqual(post.text, 'Тестовое создание поста')
+        self.assertEqual(Post.objects.count(), +1)
+        self.assertEqual(post.text, self.test_text)
         self.assertEqual(post.author, self.user)
         self.assertEqual(post.group, self.group)
 
@@ -50,7 +51,7 @@ class EditPostTest(DataBaseTests, TestCase):
         """Тестируем изменение поста."""
         # Создаем тестовый пост
         post = Post.objects.create(
-            text='Тестовый текст',
+            text=self.test_text,
             author=self.user,
             group=self.group,
         )
@@ -61,7 +62,7 @@ class EditPostTest(DataBaseTests, TestCase):
         )
         post_count = Post.objects.count()
         form_data = {
-            'text': 'Измененый текст',
+            'text': self.test_text_edit,
             'group': group_2.id,
         }
         response = self.authorized_client.post(
@@ -69,12 +70,12 @@ class EditPostTest(DataBaseTests, TestCase):
             data=form_data,
             follow=True
         )
-        post_edit = get_object_or_404(Post)
+        post_edit = Post.objects.get()
         self.assertRedirects(
             response,
             reverse('post', args=(self.user.username, post.id))
         )
         self.assertEqual(Post.objects.count(), post_count)
-        self.assertEqual(post_edit.text, 'Измененый текст')
+        self.assertEqual(post_edit.text, self.test_text_edit)
         self.assertEqual(post_edit.author, self.user)
         self.assertEqual(post_edit.group, group_2)

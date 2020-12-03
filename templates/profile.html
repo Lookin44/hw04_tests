@@ -3,10 +3,10 @@
 {% block content %}
 <main role="main" class="container">
     <div class="row">
-        {% include "profile_main.html" %}
+        {% include "profile_main.html" with author=author %}
         <div class="col-md-9">
             {% for post in page %}
-                {% include "post_main.html" %}
+                {% include "post_main.html" with post=post %}
             {% endfor %}
             {% if page.has_other_pages %}
                 {% include "paginator.html" with items=page paginator=paginator%}

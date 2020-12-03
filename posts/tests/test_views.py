@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 
 from django import forms
 from django.contrib.auth import get_user_model
@@ -22,7 +22,7 @@ class DataBaseTests(TestCase):
             description='test-description'
         )
         # Создаем тетсувую группу
-        cls.group_2 = Group.objects.create(
+        cls.group_two = Group.objects.create(
             title='test-group-2',
             slug='test_group_2',
             description='test-description for second group'
@@ -39,11 +39,11 @@ class DataBaseTests(TestCase):
             text='Тестовый текст',
             author=cls.user,
             group=cls.group,
-            pub_date=datetime.datetime.now()
+            pub_date=dt.datetime.now()
         )
         # Создаем тстовые flatpages
-        cls.site1 = Site(pk=1, domain='example.com', name='example.com')
-        cls.site1.save()
+        cls.site_one = Site(pk=1, domain='example.com', name='example.com')
+        cls.site_one.save()
         cls.about_author = FlatPage.objects.create(
             url='/about-author/', title='Об авторе', content='Начинающий'
         )
@@ -51,8 +51,8 @@ class DataBaseTests(TestCase):
             url='/about-spec/', title='Технологии',
             content='О технологиях'
         )
-        cls.about_author.sites.add(cls.site1)
-        cls.about_spec.sites.add(cls.site1)
+        cls.about_author.sites.add(cls.site_one)
+        cls.about_spec.sites.add(cls.site_one)
 
 
 @modify_settings(MIDDLEWARE={'append': 'django.contrib.flatpages.middleware'
@@ -75,7 +75,7 @@ class PostPagesTests(DataBaseTests, TestCase):
     def test_post_not_in_group(self):
         """Тестовый пост не появился на странице group_2"""
         response = self.authorized_client.get(
-            reverse('group', kwargs={'slug': self.group_2.slug})
+            reverse('group', kwargs={'slug': self.group_two.slug})
         )
         self.assertEqual(len(response.context['page']), 0)
 
@@ -100,7 +100,7 @@ class PostPagesTests(DataBaseTests, TestCase):
             Post.objects.create(
                 text='Тестовый текст',
                 author=self.user,
-                group=self.group_2,
+                group=self.group_two,
             )
         response = self.authorized_client.get(reverse('index'))
         test_posts = response.context.get('page')

@@ -1,3 +1,5 @@
+import datetime as dt
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from posts.models import Group, Post
@@ -40,7 +42,7 @@ class GroupModelTest(TestCase):
                 self.assertEqual(
                     group._meta.get_field(value).help_text, expected)
 
-    def test_object_name_is_title_fild(self):
+    def test_object_name_is_title_field(self):
         """В поле __str__ объекта group записано значение поля group.title."""
         group = GroupModelTest.group
         expected_object_name = group.title
@@ -62,13 +64,12 @@ class PostModelTest(TestCase):
             slug='test_group',
             description='test-description'
         )
-        Post.objects.create(
-            text='Test-text',
-            pub_date='22.11.2020',
+        cls.post = Post.objects.create(
+            text='A'*15,
+            pub_date=dt.datetime.now(),
             author=cls.user,
             group=cls.group
         )
-        cls.post = Post.objects.get()
 
     def test_verbose_name(self):
         """verbose_name в полях совпадает с ожидаемым."""
@@ -98,7 +99,7 @@ class PostModelTest(TestCase):
                 self.assertEqual(
                     post._meta.get_field(value).help_text, expected)
 
-    def test_object_name_is_title_fild(self):
+    def test_object_name_is_title_field(self):
         """В поле __str__ объекта post записано значение поля post.title."""
         post = PostModelTest.post
         expected_object_name = post.text
