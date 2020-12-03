@@ -166,7 +166,7 @@ class PostPagesTests(DataBaseTests, TestCase):
 
     def test_profile_page_show_correct_context(self):
         response = self.authorized_client.get(
-            reverse('profile', kwargs={'username': self.user.username})
+            reverse('profile', kwargs={'username': self.user})
         )
         page_context = response.context['page'][0]
         author_context = response.context['author']
@@ -185,7 +185,7 @@ class PostPagesTests(DataBaseTests, TestCase):
 
     def test_post_page_show_correct_context(self):
         response = self.authorized_client.get(
-            reverse('post', args=(self.user.username, self.post.id))
+            reverse('post', args=(self.user, self.post.id))
         )
         author_context = response.context['author']
         post_context = response.context['post']

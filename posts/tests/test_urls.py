@@ -65,12 +65,9 @@ class StaticURLTest(DataBaseTests, TestCase):
             reverse('index'): 200,
             reverse('group', kwargs={'slug': self.group.slug}): 200,
             reverse('new_post'): 302,
-            reverse('profile', kwargs={'username': self.user_one.username}):
-                200,
-            reverse('post', args=(self.user_one.username, self.post_one.id)):
-                200,
-            reverse('post_edit',
-                    args=(self.user_one.username, self.post_one.id)): 302,
+            reverse('profile', kwargs={'username': self.user_one}): 200,
+            reverse('post', args=(self.user_one, self.post_one.id)): 200,
+            reverse('post_edit', args=(self.user_one, self.post_one.id)): 302,
             reverse('about_author'): 200,
             reverse('about_spec'): 200,
         }
@@ -85,12 +82,11 @@ class StaticURLTest(DataBaseTests, TestCase):
             reverse('index'),
             reverse('group', kwargs={'slug': self.group.slug}),
             reverse('new_post'),
-            reverse('profile', kwargs={'username': self.user_one.username}),
-            reverse('post', args=(self.user_one.username, self.post_one.id)),
+            reverse('profile', kwargs={'username': self.user_one}),
+            reverse('post', args=(self.user_one, self.post_one.id)),
             reverse('about_author'),
             reverse('about_spec'),
-            reverse('post_edit', args=(self.user_one.username,
-                                       self.post_one.id)),
+            reverse('post_edit', args=(self.user_one, self.post_one.id)),
         ]
         for reverse_name in reverse_name:
             with self.subTest(reverse_name=reverse_name):
@@ -101,8 +97,7 @@ class StaticURLTest(DataBaseTests, TestCase):
         """Проверяем работу страниц для авторизированого пользователя,
         но не автора."""
         reverse_name_status_code = {
-            reverse('post_edit',
-                    args=(self.user_one.username, self.post_one.id)): 302,
+            reverse('post_edit', args=(self.user_one, self.post_one.id)): 302,
         }
         for reverse_name, status_code in reverse_name_status_code.items():
             with self.subTest(reverse_name=reverse_name):
@@ -116,8 +111,7 @@ class StaticURLTest(DataBaseTests, TestCase):
             reverse('new_post'): 'post_new.html',
             reverse('group', kwargs={'slug': self.group.slug}): 'group.html',
             reverse('post_edit',
-                    args=(self.user_one.username, self.post_one.id)):
-                'post_new.html',
+                    args=(self.user_one, self.post_one.id)): 'post_new.html',
         }
         for reverse_name, template in templates_reverse_name.items():
             with self.subTest(reverse_name=reverse_name):
@@ -130,10 +124,10 @@ class StaticURLTest(DataBaseTests, TestCase):
             reverse('new_post'):
                 reverse('login') + '?next=' + reverse('new_post'),
             reverse('post_edit',
-                    args=(self.user_one.username, self.post_one.id)):
+                    args=(self.user_one, self.post_one.id)):
                 reverse('login') + '?next=' +
                 reverse('post_edit',
-                        args=(self.user_one.username, self.post_one.id)),
+                        args=(self.user_one, self.post_one.id)),
         }
         for reverse_name, url in rev_name_rev_name_exp.items():
             with self.subTest(reverse_name=reverse_name):
@@ -145,10 +139,8 @@ class StaticURLTest(DataBaseTests, TestCase):
     def test_new_post_authorized_not_author(self):
         """Проверка редиректа авторизированного пользователя, но не автора."""
         reverse_name_url = {
-            reverse('post_edit',
-                    args=(self.user_one.username, self.post_one.id)):
-                reverse('post', args=(self.user_one.username,
-                                      self.post_one.id)),
+            reverse('post_edit', args=(self.user_one, self.post_one.id)):
+                reverse('post', args=(self.user_one, self.post_one.id)),
         }
         for reverse_name, url in reverse_name_url.items():
             with self.subTest(reverse_name=reverse_name):
