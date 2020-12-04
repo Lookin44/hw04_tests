@@ -12,37 +12,32 @@ class DataBaseTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        # Создаем тетсувую группу
         cls.group = Group.objects.create(
             title='test-group',
             slug='test_group',
             description='test-description'
         )
-        # Создаем гостевой аккаунт
         cls.guest_client = Client()
         user = get_user_model()
-        # Создаем первый авторизированный аккаунт
-        cls.user_one = user.objects.create_user(
+        cls.author = user.objects.create_user(
             username='test-author-1',
             password='123456'
         )
-        cls.authorized_client_one = Client()
-        cls.authorized_client_one.force_login(cls.user_one)
-        cls.user_two = user.objects.create_user(
+        cls.authorized_author = Client()
+        cls.authorized_author.force_login(cls.author)
+        cls.not_author = user.objects.create_user(
             username='test-author-2',
             password='123456'
         )
-        # Создаем второй авторизированный аккаунт
-        cls.authorized_client_two = Client()
-        cls.authorized_client_two.force_login(cls.user_two)
-        # Стоздаем тестовый пост
+        cls.authorized_not_author = Client()
+        cls.authorized_not_author.force_login(cls.not_author)
         cls.post_one = Post.objects.create(
             text='Тестовый текст',
-            author=cls.user_one,
+            author=cls.author,
             group=cls.group,
         )
-        cls.site_one = Site(pk=1, domain='example.com', name='example.com')
-        cls.site_one.save()
+        cls.site = Site(pk=1, domain='example.com', name='example.com')
+        cls.site.save()
         cls.about_author = FlatPage.objects.create(
             url='/about-author/', title='Об авторе', content='Начинающий'
         )
@@ -50,8 +45,8 @@ class DataBaseTests(TestCase):
             url='/about-spec/', title='Технологии',
             content="О технологиях"
         )
-        cls.about_author.sites.add(cls.site_one)
-        cls.about_spec.sites.add(cls.site_one)
+        cls.about_author.sites.add(cls.site)
+        cls.about_spec.sites.add(cls.site)
 
 
 @modify_settings(MIDDLEWARE={'append': 'django.contrib.flatpages.middleware'
@@ -65,9 +60,9 @@ class StaticURLTest(DataBaseTests, TestCase):
             reverse('index'): 200,
             reverse('group', kwargs={'slug': self.group.slug}): 200,
             reverse('new_post'): 302,
-            reverse('profile', kwargs={'username': self.user_one}): 200,
-            reverse('post', args=(self.user_one, self.post_one.id)): 200,
-            reverse('post_edit', args=(self.user_one, self.post_one.id)): 302,
+            reverse('profile', kwargs={'username': self.author}): 200,
+            reverse('post', args=(self.author, self.post_one.id)): 200,
+            reverse('post_edit', args=(self.author, self.post_one.id)): 302,
             reverse('about_author'): 200,
             reverse('about_spec'): 200,
         }
@@ -82,26 +77,26 @@ class StaticURLTest(DataBaseTests, TestCase):
             reverse('index'),
             reverse('group', kwargs={'slug': self.group.slug}),
             reverse('new_post'),
-            reverse('profile', kwargs={'username': self.user_one}),
-            reverse('post', args=(self.user_one, self.post_one.id)),
+            reverse('profile', kwargs={'username': self.author}),
+            reverse('post', args=(self.author, self.post_one.id)),
             reverse('about_author'),
             reverse('about_spec'),
-            reverse('post_edit', args=(self.user_one, self.post_one.id)),
+            reverse('post_edit', args=(self.author, self.post_one.id)),
         ]
         for reverse_name in reverse_name:
             with self.subTest(reverse_name=reverse_name):
-                response = self.authorized_client_one.get(reverse_name)
+                response = self.authorized_author.get(reverse_name)
                 self.assertEqual(response.status_code, 200)
 
     def test_pages_authorized_client_not_author(self):
         """Проверяем работу страниц для авторизированого пользователя,
         но не автора."""
         reverse_name_status_code = {
-            reverse('post_edit', args=(self.user_one, self.post_one.id)): 302,
+            reverse('post_edit', args=(self.author, self.post_one.id)): 302,
         }
         for reverse_name, status_code in reverse_name_status_code.items():
             with self.subTest(reverse_name=reverse_name):
-                response = self.authorized_client_two.get(reverse_name)
+                response = self.authorized_not_author.get(reverse_name)
                 self.assertEqual(response.status_code, status_code)
 
     def test_urls_uses_correct_template(self):
@@ -111,11 +106,11 @@ class StaticURLTest(DataBaseTests, TestCase):
             reverse('new_post'): 'post_new.html',
             reverse('group', kwargs={'slug': self.group.slug}): 'group.html',
             reverse('post_edit',
-                    args=(self.user_one, self.post_one.id)): 'post_new.html',
+                    args=(self.author, self.post_one.id)): 'post_new.html',
         }
         for reverse_name, template in templates_reverse_name.items():
             with self.subTest(reverse_name=reverse_name):
-                response = self.authorized_client_one.get(reverse_name)
+                response = self.authorized_author.get(reverse_name)
                 self.assertTemplateUsed(response, template)
 
     def test_new_post_unauthorized(self):
@@ -124,10 +119,10 @@ class StaticURLTest(DataBaseTests, TestCase):
             reverse('new_post'):
                 reverse('login') + '?next=' + reverse('new_post'),
             reverse('post_edit',
-                    args=(self.user_one, self.post_one.id)):
+                    args=(self.author, self.post_one.id)):
                 reverse('login') + '?next=' +
                 reverse('post_edit',
-                        args=(self.user_one, self.post_one.id)),
+                        args=(self.author, self.post_one.id)),
         }
         for reverse_name, url in rev_name_rev_name_exp.items():
             with self.subTest(reverse_name=reverse_name):
@@ -139,11 +134,11 @@ class StaticURLTest(DataBaseTests, TestCase):
     def test_new_post_authorized_not_author(self):
         """Проверка редиректа авторизированного пользователя, но не автора."""
         reverse_name_url = {
-            reverse('post_edit', args=(self.user_one, self.post_one.id)):
-                reverse('post', args=(self.user_one, self.post_one.id)),
+            reverse('post_edit', args=(self.author, self.post_one.id)):
+                reverse('post', args=(self.author, self.post_one.id)),
         }
         for reverse_name, url in reverse_name_url.items():
             with self.subTest(reverse_name=reverse_name):
-                response = self.authorized_client_two.get(reverse_name,
+                response = self.authorized_not_author.get(reverse_name,
                                                           follow=True)
                 self.assertRedirects(response, url, 302)

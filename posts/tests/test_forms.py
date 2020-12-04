@@ -22,17 +22,15 @@ class DataBaseTests(TestCase):
         )
         cls.authorized_client = Client()
         cls.authorized_client.force_login(cls.user)
-        # Создаем тестовый текст
-        cls.test_text = 'Тестовое создание поста'
-        cls.test_text_edit = 'Измененый текст для тестового поста'
 
 
 class EditPostTest(DataBaseTests, TestCase):
     """Тестируем добовление и изменение поста."""
     def test_new_post(self):
         """Тестируем добовление поста."""
+        test_text = 'Тестовое создание поста'
         form_data = {
-            'text': self.test_text,
+            'text': test_text,
             'group': self.group.id,
         }
         response = self.authorized_client.post(
@@ -40,18 +38,19 @@ class EditPostTest(DataBaseTests, TestCase):
             data=form_data,
             follow=True
         )
-        post = Post.objects.get()
+        post = Post.objects.first()
         self.assertRedirects(response, reverse('index'))
-        self.assertEqual(Post.objects.count(), +1)
-        self.assertEqual(post.text, self.test_text)
+        self.assertEqual(Post.objects.count(), 1)
+        self.assertEqual(post.text, test_text)
         self.assertEqual(post.author, self.user)
         self.assertEqual(post.group, self.group)
 
     def test_edit_post(self):
         """Тестируем изменение поста."""
-        # Создаем тестовый пост
+        test_text = 'Тестовое создание поста'
+        test_text_edit = 'Измененый текст для тестового поста'
         post = Post.objects.create(
-            text=self.test_text,
+            text=test_text,
             author=self.user,
             group=self.group,
         )
@@ -62,7 +61,7 @@ class EditPostTest(DataBaseTests, TestCase):
         )
         post_count = Post.objects.count()
         form_data = {
-            'text': self.test_text_edit,
+            'text': test_text_edit,
             'group': group_2.id,
         }
         response = self.authorized_client.post(
@@ -70,12 +69,12 @@ class EditPostTest(DataBaseTests, TestCase):
             data=form_data,
             follow=True
         )
-        post_edit = Post.objects.get()
+        post_edit = Post.objects.first()
         self.assertRedirects(
             response,
             reverse('post', args=(self.user.username, post.id))
         )
         self.assertEqual(Post.objects.count(), post_count)
-        self.assertEqual(post_edit.text, self.test_text_edit)
+        self.assertEqual(post_edit.text, test_text_edit)
         self.assertEqual(post_edit.author, self.user)
         self.assertEqual(post_edit.group, group_2)

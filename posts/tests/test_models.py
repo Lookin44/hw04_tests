@@ -100,7 +100,8 @@ class PostModelTest(TestCase):
                     post._meta.get_field(value).help_text, expected)
 
     def test_object_name_is_title_field(self):
-        """В поле __str__ объекта post записано значение поля post.title."""
+        """В поле __str__ объекта post записано значение поля post.title не
+         превышающее 15 символов."""
         post = PostModelTest.post
-        expected_object_name = post.text
+        expected_object_name = post.text[:15]
         self.assertEquals(expected_object_name, str(post))

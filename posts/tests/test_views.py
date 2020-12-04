@@ -15,33 +15,28 @@ class DataBaseTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        # Создаем тесувую группу
         cls.group = Group.objects.create(
             title='test-group',
             slug='test_group',
             description='test-description'
         )
-        # Создаем тетсувую группу
         cls.group_two = Group.objects.create(
             title='test-group-2',
             slug='test_group_2',
             description='test-description for second group'
         )
-        # Создаем авторизированный аккаунт
         user = get_user_model()
         cls.user = user.objects.create_user(
             username='test-author',
         )
         cls.authorized_client = Client()
         cls.authorized_client.force_login(cls.user)
-        # Стоздаем тестовый пост
         cls.post = Post.objects.create(
             text='Тестовый текст',
             author=cls.user,
             group=cls.group,
             pub_date=dt.datetime.now()
         )
-        # Создаем тстовые flatpages
         cls.site_one = Site(pk=1, domain='example.com', name='example.com')
         cls.site_one.save()
         cls.about_author = FlatPage.objects.create(
