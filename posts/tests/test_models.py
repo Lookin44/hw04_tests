@@ -65,7 +65,7 @@ class PostModelTest(TestCase):
             description='test-description'
         )
         cls.post = Post.objects.create(
-            text='A'*15,
+            text='A'*100,
             pub_date=dt.datetime.now(),
             author=cls.user,
             group=cls.group
