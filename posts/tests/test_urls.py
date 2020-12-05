@@ -65,6 +65,7 @@ class StaticURLTest(DataBaseTests, TestCase):
             reverse('post_edit', args=(self.author, self.post_one.id)): 302,
             reverse('about_author'): 200,
             reverse('about_spec'): 200,
+            reverse('profile', kwargs={'username': 'author_not_in'}): 404,
         }
         for reverse_name, status_code in reverse_name_status_code.items():
             with self.subTest(reverse_name=reverse_name):

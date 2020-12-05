@@ -4,7 +4,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = '3xt*1^-5k8b)f2edx=4mw7x!6sn^#0o5q!+hd=^8yqxex^8m)i'
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     "localhost",
@@ -39,11 +39,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'yatube.urls'
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
-SMALL_BASE_DIR = os.path.join(BASE_DIR, "templates", "small_base")
+MISC_DIR = os.path.join(BASE_DIR, "templates", "misc")
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [TEMPLATES_DIR, SMALL_BASE_DIR],
+        'DIRS': [TEMPLATES_DIR, MISC_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
